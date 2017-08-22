@@ -189,7 +189,7 @@ int main()
             pts[3] = Point2f(digit.cols, digit.rows);
 
             Mat m = getPerspectiveTransform(tiles[i], pts);
-            warpPerspective(sudoku_binary, digit, m, digit.size());
+            warpPerspective(sudoku, digit, m, digit.size());
 
             medianBlur(digit, digit, 5);
             adaptiveThreshold(digit, digit, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 5, 2);
