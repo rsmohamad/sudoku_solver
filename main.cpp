@@ -7,22 +7,84 @@ using namespace std;
 
 const int OFFSET = 10;
 
+bool isSudokuCorrect(const vector<int> &sudoku)
+{
+    vector<int> num_set(9);
+    for (int i = 0; i < 9; i++) {
+        // Check each row
+        fill(num_set.begin(), num_set.end(), 0);
+        for (int j = 0; j < 9; j++) {
+            int index = i * 9 + j;
+            if (sudoku[index])
+                if (++num_set[sudoku[index] - 1] > 1)
+                    return false;
+        }
+
+        // Check each column
+        fill(num_set.begin(), num_set.end(), 0);
+        for (int j = 0; j < 9; j++) {
+            int index = i + j * 9;
+            if (sudoku[index])
+                if (++num_set[sudoku[index] - 1] > 1)
+                    return false;
+        }
+
+        //Check each box
+        fill(num_set.begin(), num_set.end(), 0);
+        for (int j = 0; j < 9; j++) {
+
+            int index = (i / 3) * 27;
+            index += (i % 3) * 3;
+            index += (j / 3) * 9;
+            index += (j % 3);
+
+            if (sudoku[index])
+                if (++num_set[sudoku[index] - 1] > 1)
+                    return false;
+        }
+    }
+    return true;
+}
+
+// Backtracking method
+bool solveSudoku(vector<int> &sudoku, int numStart = 0)
+{
+    if (find(sudoku.begin(), sudoku.end(), 0) == sudoku.end() && isSudokuCorrect(sudoku))
+        return true;
+
+    if (sudoku[numStart])
+        return solveSudoku(sudoku, numStart + 1);
+    else {
+        for (int i = 1; i <= 9; i++) {
+            sudoku[numStart] = i;
+            if (!isSudokuCorrect(sudoku))
+                continue;
+            else if (solveSudoku(sudoku, numStart + 1))
+                return true;
+        }
+
+        sudoku[numStart] = 0;
+        return false;
+    }
+}
+
 void printSudoku(const vector<int> &sudoku)
 {
     cout << "\n";
     for (int i = 0; i < sudoku.size(); i++) {
+
         if (i % 9 == 0)
             cout << "\n";
-        if (i == 27 || i == 54)
-            cout << "------------\n";
-        if (i % 3 == 0 || i % 6 == 0)
+        else if (i % 3 == 0 || i % 6 == 0)
             cout << "|";
-        if (sudoku[i] == 0) {
-            cout << "x";
-        }
-        else {
+
+        if (i == 27 || i == 54)
+            cout << "-----------\n";
+
+        if (sudoku[i] == 0)
+            cout << ".";
+        else
             cout << sudoku[i];
-        }
 
     }
     cout << endl;
@@ -209,10 +271,14 @@ int main()
 //            waitKey(10000);
         }
         printSudoku(sudoku_data);
+        solveSudoku(sudoku_data);
+        printSudoku(sudoku_data);
+
     }
 
+
+
     imshow("Sudoku Isolated", sudoku);
-    imshow("Sudoku", img_gray);
     waitKey(0);
     return 0;
 }
