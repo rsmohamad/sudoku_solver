@@ -12,7 +12,7 @@ include_directories( ${LEPTONICA_INCLUDE_DIRS} )
 link_directories( ${TESSERACT_LIBRARY_DIRS} )
 link_directories( ${LEPTONICA_LIBRARY_DIRS} )
 set(CMAKE_CXX_STANDARD 11)
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp SudokuCV.cpp SudokuCV.h)
 
 add_executable(sudoku_solver ${SOURCE_FILES})
 target_link_libraries( sudoku_solver ${OpenCV_LIBS} ${TESSERACT_LIBRARIES} ${LEPTONICA_LIBRARIES})
