@@ -49,23 +49,22 @@ bool isSudokuCorrect(const vector<int> &sudoku)
 }
 
 // Backtracking method
-bool solveSudoku(vector<int> &sudoku, int numStart = 0)
+bool solveSudoku(vector<int> &sudoku, int index = 0)
 {
     if (find(sudoku.begin(), sudoku.end(), 0) == sudoku.end() && isSudokuCorrect(sudoku))
         return true;
 
-    if (sudoku[numStart])
-        return solveSudoku(sudoku, numStart + 1);
+    if (sudoku[index])
+        return solveSudoku(sudoku, index + 1);
     else {
         for (int i = 1; i <= 9; i++) {
-            sudoku[numStart] = i;
+            sudoku[index] = i;
             if (!isSudokuCorrect(sudoku))
                 continue;
-            else if (solveSudoku(sudoku, numStart + 1))
+            else if (solveSudoku(sudoku, index + 1))
                 return true;
         }
-
-        sudoku[numStart] = 0;
+        sudoku[index] = 0;
         return false;
     }
 }
@@ -77,7 +76,7 @@ void printSudoku(const vector<int> &sudoku)
 
         if (i % 9 == 0)
             cout << "\n";
-        else if (i % 3 == 0 || i % 6 == 0)
+        else if (i % 3 == 0)
             cout << "|";
 
         if (i == 27 || i == 54)
@@ -125,7 +124,6 @@ void sortPoints(vector<Point2f> &tiles)
                  return a.x < b.x;
              });
     }
-
 }
 
 void projectSolvedSudoku(Mat &sudoku,
@@ -170,25 +168,25 @@ void preprocessDigit(Mat &digit)
 {
     medianBlur(digit, digit, 11);
     adaptiveThreshold(digit, digit, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 21, 2);
-    medianBlur(digit, digit, 11);
     bitwise_not(digit, digit);
-
     // Flood fill hack to remove borders
-    for (int i = 1; i < 10; i++)
-        for (int j = 1; j < digit.rows; j++) {
+    for (int i = 0; i < 10; i++)
+        for (int j = 0; j < digit.rows - 1; j++) {
+
             if (digit.data[i + j * digit.step] == 255)
                 floodFill(digit, Point2f(i, j), Scalar(0));
-            if (digit.data[(digit.cols - i) + j * digit.step] == 255)
-                floodFill(digit, Point2f(digit.cols - i, j), Scalar(0));
+            if (digit.data[(digit.cols - 1 - i) + j * digit.step] ==255)
+                floodFill(digit, Point2f(digit.cols - 1 - i, j), Scalar(0));
         }
 
-    for (int j = 1; j < 10; j++)
-        for (int i = 1; i < digit.cols; i++) {
+    for (int j = 0; j < 10; j++)
+        for (int i = 0; i < digit.cols - 1; i++) {
             if (digit.data[i + j * digit.step] == 255)
                 floodFill(digit, Point2f(i, j), Scalar(0));
-            if (digit.data[i + (digit.rows - j) * digit.step] == 255)
-                floodFill(digit, Point2f(i, digit.rows - j), Scalar(0));
+            if (digit.data[i + (digit.rows - 1 - j) * digit.step] == 255)
+                floodFill(digit, Point2f(i, digit.rows - 1 - j), Scalar(0));
         }
+    medianBlur(digit, digit, 19);
 }
 
 int main()
@@ -249,12 +247,6 @@ int main()
         }
     }
 
-    for (Point2f p : sudoku_contour) {
-        circle(img, p, 4, Scalar(255, 0, 0));
-    }
-
-    cout << sudoku_contour.size() << endl;
-
     // 3. Isolate sudoku from background
     sortPolygon(sudoku_contour);
     vector<Point2f> pts(4);
@@ -291,7 +283,6 @@ int main()
 
         if (it == strong_lines.end())
             strong_lines.push_back(lines[i]);
-
     }
 
     // Sort between horizontal and vertical lines
@@ -310,27 +301,8 @@ int main()
         }
     }
 
-//    for (int i = 0; i < crossing_points.size(); i++) {
-//        circle(sudoku, crossing_points[i], 3, Scalar(64));
-//    }
-//
-//    for (size_t i = 0; i < lines.size(); i++) {
-//        float rho = lines[i][0], theta = lines[i][1];
-//        Point pt1, pt2;
-//        double a = cos(theta), b = sin(theta);
-//        double x0 = a * rho, y0 = b * rho;
-//        pt1.x = cvRound(x0 + 1000 * (-b));
-//        pt1.y = cvRound(y0 + 1000 * (a));
-//        pt2.x = cvRound(x0 - 1000 * (-b));
-//        pt2.y = cvRound(y0 - 1000 * (a));
-//        line(sudoku, pt1, pt2, Scalar(0), 1, CV_AA);
-//    }
-
     // 6. Text recognition
     // Do this step if sudoku is valid ~ has 81 tiles
-
-    cout << crossing_points.size() << endl;
-
     if (crossing_points.size() == 100) {
         tesseract::TessBaseAPI ocr;
 
@@ -362,6 +334,7 @@ int main()
             Mat m = getPerspectiveTransform(tiles, pts);
             warpPerspective(sudoku_clone, digit, m, digit.size());
 
+            imshow("Digit before processing", digit);
             preprocessDigit(digit);
 
             ocr.TesseractRect(digit.data, 1, digit.step1(), 10, 10, digit.cols - 20, digit.rows - 20);
@@ -370,9 +343,9 @@ int main()
             int number = atoi(text);
             unsolved_sudoku.push_back(number);
 
-//            cout << number << endl;
-//            imshow("Digit", digit);
-//            waitKey(10000);
+            cout << number << endl;
+            imshow("Digit", digit);
+            waitKey(10000);
         }
 
         printSudoku(unsolved_sudoku);
@@ -385,7 +358,6 @@ int main()
         projectSolvedSudoku(img, solved_sudoku, unsolved_sudoku, crossing_points, sudoku_contour);
     }
 
-    //imshow("After", sudoku);
     imshow("Result", img);
     waitKey(0);
     return 0;
