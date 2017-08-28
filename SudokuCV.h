@@ -11,6 +11,7 @@
 #include <algorithm>
 
 using cv::Mat;
+using cv::Point;
 using cv::Point2f;
 using std::vector;
 
@@ -32,24 +33,26 @@ private:
     bool findSudokuTilesHoughLines();
     bool findSudokuTilesPrimitive();
     bool recognizeText();
-    void preprocessDigit(Mat &digit) const;
-    void sortPoints(vector<Point2f> &points);
 
     bool isSolved(const vector<int> &sudoku) const;
     bool isSudokuCorrect(const vector<int> &sudoku) const;
     bool solveSudoku(vector<int> &sudoku, int index = 0);
     bool solveSudoku();
 
+    void preprocessDigit(Mat &digit) const;
+    void sortPoints(vector<Point2f> &points);
     void printSudoku(const vector<int> &sudoku) const;
+    vector<Point2f> findLargestQuadilateralApprox(const vector<vector<Point>> &contours) const;
 public:
     SudokuCV()
     {}
     bool addImageAndSolve(const Mat &img);
-    vector<int> getPuzzle() const;
-    vector<int> getSolution() const;
     void printPuzzle() const;
     void printSolution() const;
+    vector<int> getPuzzle() const;
+    vector<int> getSolution() const;
     Mat getProjectedResult();
+    bool getContouredImage(const Mat &src, Mat &dst);
 
 };
 
